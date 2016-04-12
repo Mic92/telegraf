@@ -200,9 +200,8 @@ func (d *Docker) gatherContainer(
 	}
 
 	tags := map[string]string{
-		"cont_id":    container.ID,
-		"cont_name":  cname,
-		"cont_image": container.Image,
+		"container_name":  cname,
+		"container_image": container.Image,
 	}
 	if len(d.ContainerNames) > 0 {
 		if !sliceContains(cname, d.ContainerNames) {

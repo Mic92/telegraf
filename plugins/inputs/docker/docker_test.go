@@ -21,9 +21,8 @@ func TestDockerGatherContainerStats(t *testing.T) {
 	stats := testStats()
 
 	tags := map[string]string{
-		"cont_id":    "foobarbaz",
-		"cont_name":  "redis",
-		"cont_image": "redis/image",
+		"container_name":  "redis",
+		"container_image": "redis/image",
 	}
 	gatherContainerStats(stats, &acc, tags)
 
@@ -372,10 +371,9 @@ func TestDockerGatherInfo(t *testing.T) {
 			"usage_total": uint64(1231652),
 		},
 		map[string]string{
-			"cont_id":    "b7dfbb9478a6ae55e237d4d74f8bbb753f0817192b5081334dc78476296e2173",
-			"cont_name":  "etcd2",
-			"cont_image": "quay.io/coreos/etcd:v2.2.2",
-			"cpu":        "cpu3",
+			"container_name":  "etcd2",
+			"container_image": "quay.io/coreos/etcd:v2.2.2",
+			"cpu":             "cpu3",
 		},
 	)
 	acc.AssertContainsTaggedFields(t,
@@ -417,9 +415,8 @@ func TestDockerGatherInfo(t *testing.T) {
 			"limit":                     uint64(18935443456),
 		},
 		map[string]string{
-			"cont_id":    "b7dfbb9478a6ae55e237d4d74f8bbb753f0817192b5081334dc78476296e2173",
-			"cont_name":  "etcd2",
-			"cont_image": "quay.io/coreos/etcd:v2.2.2",
+			"container_name":  "etcd2",
+			"container_image": "quay.io/coreos/etcd:v2.2.2",
 		},
 	)
 
