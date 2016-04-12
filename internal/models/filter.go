@@ -24,6 +24,9 @@ type Filter struct {
 	TagDrop []TagFilter
 	TagPass []TagFilter
 
+	TagRemove []string
+	TagKeep   []string
+
 	IsActive bool
 }
 
@@ -120,4 +123,30 @@ func (f Filter) ShouldTagsPass(tags map[string]string) bool {
 	}
 
 	return true
+}
+
+// Apply TagKeep and TagRemove filters.
+func (f Filter) FilterTags(tags map[string]string) {
+	if f.TagKeep != nil {
+		for k, _ := range tags {
+			if !sliceContains(k, f.TagKeep) {
+				delete(tags, k)
+			}
+		}
+	}
+
+	if f.TagRemove != nil {
+		for _, tagremove := range f.TagRemove {
+			delete(tags, tagremove)
+		}
+	}
+}
+
+func sliceContains(s string, a []string) bool {
+	for _, as := range a {
+		if as == s {
+			return true
+		}
+	}
+	return false
 }

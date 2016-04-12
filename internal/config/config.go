@@ -580,8 +580,8 @@ func (c *Config) addInput(name string, table *ast.Table) error {
 
 // buildFilter builds a Filter
 // (tagpass/tagdrop/namepass/namedrop/fieldpass/fielddrop) to
-// be inserted into the internal_models.OutputConfig/internal_models.InputConfig to be used for prefix
-// filtering on tags and measurements
+// be inserted into the internal_models.OutputConfig/internal_models.InputConfig
+// to be used for glob filtering on tags and measurements
 func buildFilter(tbl *ast.Table) internal_models.Filter {
 	f := internal_models.Filter{}
 
@@ -681,6 +681,30 @@ func buildFilter(tbl *ast.Table) internal_models.Filter {
 		}
 	}
 
+	if node, ok := tbl.Fields["tagremove"]; ok {
+		if kv, ok := node.(*ast.KeyValue); ok {
+			if ary, ok := kv.Value.(*ast.Array); ok {
+				for _, elem := range ary.Value {
+					if str, ok := elem.(*ast.String); ok {
+						f.TagRemove = append(f.TagRemove, str.Value)
+					}
+				}
+			}
+		}
+	}
+
+	if node, ok := tbl.Fields["tagkeep"]; ok {
+		if kv, ok := node.(*ast.KeyValue); ok {
+			if ary, ok := kv.Value.(*ast.Array); ok {
+				for _, elem := range ary.Value {
+					if str, ok := elem.(*ast.String); ok {
+						f.TagKeep = append(f.TagKeep, str.Value)
+					}
+				}
+			}
+		}
+	}
+
 	delete(tbl.Fields, "namedrop")
 	delete(tbl.Fields, "namepass")
 	delete(tbl.Fields, "fielddrop")
@@ -689,6 +713,8 @@ func buildFilter(tbl *ast.Table) internal_models.Filter {
 	delete(tbl.Fields, "pass")
 	delete(tbl.Fields, "tagdrop")
 	delete(tbl.Fields, "tagpass")
+	delete(tbl.Fields, "tagremove")
+	delete(tbl.Fields, "tagkeep")
 	return f
 }
 
