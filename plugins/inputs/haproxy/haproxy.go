@@ -109,6 +109,27 @@ func (r *haproxy) Description() string {
 	return "Read metrics of haproxy, via socket or csv stats page"
 }
 
+func resolveHosts(rawurl string) []string {
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		return []string{rawurl}
+	}
+	host, port, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		return []string{host}
+	}
+	hosts, err := net.LookupHost(host)
+	if err != nil {
+		return []string{host}
+	}
+	hostWithPort := make([]string, len(hosts))
+	for _, h := range hosts {
+		u.Host = net.JoinHostPort(h, port)
+		hostWithPort = append(hostWithPort, u.String())
+	}
+	return hostWithPort
+}
+
 // Reads stats from all configured servers accumulates stats.
 // Returns one of the errors encountered while gather stats (if any).
 func (g *haproxy) Gather(acc telegraf.Accumulator) error {
@@ -118,12 +139,14 @@ func (g *haproxy) Gather(acc telegraf.Accumulator) error {
 
 	var wg sync.WaitGroup
 	errChan := errchan.New(len(g.Servers))
-	wg.Add(len(g.Servers))
-	for _, server := range g.Servers {
-		go func(serv string) {
-			defer wg.Done()
-			errChan.C <- g.gatherServer(serv, acc)
-		}(server)
+	for _, hostname := range g.Servers {
+		for _, serv := range resolveHosts(hostname) {
+			wg.Add(1)
+			go func(serv string) {
+				defer wg.Done()
+				errChan.C <- g.gatherServer(serv, acc)
+			}(serv)
+		}
 	}
 
 	wg.Wait()
