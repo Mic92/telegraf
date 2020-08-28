@@ -1840,6 +1840,83 @@ func getParserConfig(name string, tbl *ast.Table) (*parsers.Config, error) {
 		}
 	}
 
+	if node, ok := tbl.Fields["xml"]; ok {
+		if subtbls, ok := node.([]*ast.Table); ok {
+			c.XMLConfig = make([]parsers.XMLConfig, len(subtbls))
+			for i, subtbl := range subtbls {
+				// Parse the measurment name
+				if val, ok := subtbl.Fields["metric_name"]; ok {
+					if kv, ok := val.(*ast.KeyValue); ok {
+						if str, ok := kv.Value.(*ast.String); ok {
+							c.XMLConfig[i].MetricQuery = str.Value
+						}
+					}
+				}
+
+				// Parse the root node selector
+				if val, ok := subtbl.Fields["selected_nodes"]; ok {
+					if kv, ok := val.(*ast.KeyValue); ok {
+						if str, ok := kv.Value.(*ast.String); ok {
+							c.XMLConfig[i].Selection = str.Value
+						}
+					}
+				}
+
+				// Parse the timestamp query
+				if val, ok := subtbl.Fields["timestamp"]; ok {
+					if kv, ok := val.(*ast.KeyValue); ok {
+						if str, ok := kv.Value.(*ast.String); ok {
+							c.XMLConfig[i].Timestamp = str.Value
+						}
+					}
+				}
+
+				// Parse the timestamp query
+				if val, ok := subtbl.Fields["timestamp_format"]; ok {
+					if kv, ok := val.(*ast.KeyValue); ok {
+						if str, ok := kv.Value.(*ast.String); ok {
+							c.XMLConfig[i].TimestampFmt = str.Value
+						}
+					}
+				}
+
+				// Create the tags and fields and fill them
+				c.XMLConfig[i].Tags = make(map[string]string)
+				if subtbl_defs, ok := subtbl.Fields["tags"].(*ast.Table); ok {
+					for name, val := range subtbl_defs.Fields {
+						if kv, ok := val.(*ast.KeyValue); ok {
+							if str, ok := kv.Value.(*ast.String); ok {
+								c.XMLConfig[i].Tags[name] = str.Value
+							}
+						}
+					}
+				}
+
+				c.XMLConfig[i].Fields = make(map[string]string)
+				if subtbl_defs, ok := subtbl.Fields["fields"].(*ast.Table); ok {
+					for name, val := range subtbl_defs.Fields {
+						if kv, ok := val.(*ast.KeyValue); ok {
+							if str, ok := kv.Value.(*ast.String); ok {
+								c.XMLConfig[i].Fields[name] = str.Value
+							}
+						}
+					}
+				}
+
+				c.XMLConfig[i].FieldsInt = make(map[string]string)
+				if subtbl_defs, ok := subtbl.Fields["fields_int"].(*ast.Table); ok {
+					for name, val := range subtbl_defs.Fields {
+						if kv, ok := val.(*ast.KeyValue); ok {
+							if str, ok := kv.Value.(*ast.String); ok {
+								c.XMLConfig[i].FieldsInt[name] = str.Value
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	c.MetricName = name
 
 	delete(tbl.Fields, "data_format")
@@ -1884,6 +1961,7 @@ func getParserConfig(name string, tbl *ast.Table) (*parsers.Config, error) {
 	delete(tbl.Fields, "csv_timezone")
 	delete(tbl.Fields, "csv_trim_space")
 	delete(tbl.Fields, "form_urlencoded_tag_keys")
+	delete(tbl.Fields, "xml")
 
 	return c, nil
 }
